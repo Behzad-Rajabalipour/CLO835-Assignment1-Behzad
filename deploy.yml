@@ -1,0 +1,137 @@
+---
+- name: Deploy Application to EC2
+  hosts: WorkerNode
+  gather_facts: yes
+  become: yes
+
+  vars:
+    # Default SSH variables (can be overridden in inventory or via other means)
+    ansible_user: ec2-user
+    ansible_ssh_private_key_file: /home/ec2-user/.ssh/ec2_key.pem
+    shell: /bin/bash  # Set the default shell
+
+  tasks:
+    - name: Install python3 and pip on RedHat-based systems
+      yum:
+        name:
+          - python3
+          - python3-pip
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install docker-compose using pip on RedHat-based systems
+      pip:
+        name: docker-compose
+        executable: pip3
+      when: ansible_os_family == "RedHat"
+
+    - name: Install docker-compose on Debian-based systems
+      apt:
+        name: docker-compose
+        state: latest
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure docker-compose is installed
+      shell: |
+        command -v docker-compose || pip3 install docker-compose
+      args:
+        executable: /bin/bash
+
+    - name: Install Docker on RedHat-based systems
+      yum:
+        name: docker
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Docker on Debian-based systems
+      apt:
+        name: docker.io
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat" or ansible_os_family == "Debian"
+
+    - name: Create application directory
+      file:
+        path: /home/ec2-user/app
+        state: directory
+        mode: '0755'
+
+    - name: Copy docker-compose.yml to EC2 instance
+      copy:
+        src: ./docker-compose.yml
+        dest: /home/ec2-user/app/docker-compose.yml
+        mode: '0644'
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to Docker group
+      shell: sudo usermod -aG docker ec2-user
+      args:
+        executable: /bin/bash
+
+    - name: Authenticate with Amazon ECR
+      shell: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ECR_REGISTRY }}
+      args:
+        executable: /bin/bash
+      environment:
+         AWS_DEFAULT_REGION: "us-east-1"
+
+    - name: Show Docker Compose version
+      command: /usr/local/bin/docker-compose --version
+      register: docker_compose_version
+      ignore_errors: yes
+
+    - name: Display Docker Compose version
+      debug:
+        msg: "Docker Compose version: {{ docker_compose_version.stdout }}"
+
+    # - name: Pull latest Docker images
+    #   command: /usr/local/bin/docker-compose pull
+    #   args:
+    #     chdir: /home/ec2-user/app
+    #   environment:
+    #     ECR_REGISTRY: "{{ ECR_REGISTRY }}"
+    #     IMAGE_TAG: "latest"
+
+    - name: Debug environment variables
+      debug:
+        msg: "PATH: {{ ansible_env.PATH }}"
+
+    - name: Pull latest Docker images
+      command: /usr/local/bin/docker-compose pull
+      args:
+        chdir: /home/ec2-user/app
+      environment:
+        ECR_REGISTRY: "{{ ECR_REGISTRY }}"
+        IMAGE_TAG: "1"
+        PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+    - name: Show Docker Compose version
+      command: /usr/local/bin/docker-compose --version
+      register: docker_compose_version
+      ignore_errors: yes
+      environment:
+        PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+    - name: Restart containers
+      shell: |
+        /usr/local/bin/docker-compose down
+        /usr/local/bin/docker-compose up -d
+      args:
+        chdir: /home/ec2-user/app
+      environment:
+        ECR_REGISTRY: "{{ ECR_REGISTRY }}"
+        IMAGE_TAG: "1"
+        DB_PASSWORD: "behzad123"
+        PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"

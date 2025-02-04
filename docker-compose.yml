@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  my_app_1:
+    image: "${ECR_REGISTRY}/my_app:${IMAGE_TAG}"
+    ports:
+      - "8081:8080"  # Exposing different ports for each instance
+    environment:
+      - DBHOST=my_db_net  # Custom alias for my_db
+      - DBPORT=3306
+      - DBPWD=${DB_PASSWORD}
+      - APP_COLOR=red  # Unique APP_COLOR
+    depends_on:
+      - my_db
+    restart: always
+    networks:
+      - network1
+
+  my_app_2:
+    image: "${ECR_REGISTRY}/my_app:${IMAGE_TAG}"
+    ports:
+      - "8082:8080"
+    environment:
+      - DBHOST=my_db_net
+      - DBPORT=3306
+      - DBPWD=${DB_PASSWORD}
+      - APP_COLOR=green
+    depends_on:
+      - my_db
+    restart: always
+    networks:
+      - network1
+
+  my_app_3:
+    image: "${ECR_REGISTRY}/my_app:${IMAGE_TAG}"
+    ports:
+      - "8083:8080"
+    environment:
+      - DBHOST=my_db_net
+      - DBPORT=3306
+      - DBPWD=${DB_PASSWORD}
+      - APP_COLOR=blue
+    depends_on:
+      - my_db
+    restart: always
+    networks:
+      - network1
+
+  my_db:
+    image: "${ECR_REGISTRY}/my_db:${IMAGE_TAG}"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/data/db
+    restart: always
+    networks:
+      network1:
+        aliases:
+          - my_db_net  # Alias for my_db
+
+volumes:
+  db_data:
+
+networks:
+  network1:  # This was missing in your original code
+    name: my_chosen_network  # Optional: You can give your network a specific name

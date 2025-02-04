@@ -24,7 +24,7 @@ db_conn = connections.Connection(
     
 )
 output = {}
-table = 'employee';
+table = 'employee'
 
 # Define the supported color codes
 color_codes = {

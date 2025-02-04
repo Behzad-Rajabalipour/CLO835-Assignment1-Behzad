@@ -10,7 +10,6 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-
 # Building and running 2 tier web application locally
 ### Building mysql docker image 
 ```

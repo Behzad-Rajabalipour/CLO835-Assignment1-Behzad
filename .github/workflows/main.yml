@@ -62,28 +62,28 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-      - name: Capture Terraform Outputs
-        id: capture_terraform_outputs
-        run: |
-          echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id | tail -n 1)" >> $GITHUB_ENV
-          echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key | tail -n 1)" >> $GITHUB_ENV
-          echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip | tail -n 1)" >> $GITHUB_ENV
+      # - name: Capture Terraform Outputs
+      #   id: capture_terraform_outputs
+      #   run: |
+      #     echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" >> $GITHUB_ENV
+      #     echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" >> $GITHUB_ENV
+      #     echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
 
-          echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id | tail -n 1)" 
-          echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key | tail -n 1)" 
-          echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip | tail -n 1)" 
+      #     echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" 
+      #     echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" 
+      #     echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" 
 
 
       - name: Create ECR Repositories
         run: |
-          export AWS_ACCESS_KEY_ID="${{ env.ECR_USER_ACCESS_KEY }}"
-          export AWS_SECRET_ACCESS_KEY="${{ env.ECR_USER_SECRET_KEY }}"
-          export AWS_REGION="us-east-1"
           for repo in my_app my_db; do
             chmod +x create_ecr_repository.sh  # Grant execute permissions
             ECR_REPO_NAME=$repo ./create_ecr_repository.sh
           done
-
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ECR_USER_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_USER_SECRET_KEY }}
+          AWS_REGION: "us-east-1"
 
   docker_build_push:
     name: Build and Push Docker Images to ECR

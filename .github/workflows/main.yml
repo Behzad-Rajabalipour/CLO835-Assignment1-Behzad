@@ -48,6 +48,11 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Run check_and_import.sh to Import IAM User if Needed
+        run: |
+          chmod +x ./check_and_import.sh
+          ./check_and_import.sh
+
       - name: Terraform Plan
         run: terraform plan -out=plan.out
 
@@ -89,7 +94,7 @@ jobs:
           aws-access-key-id: ${{ needs.infrastructure.outputs.ECR_USER_ACCESS_KEY }}
           aws-secret-access-key: ${{ needs.infrastructure.outputs.ECR_USER_SECRET_KEY }}
           aws-region: us-east-1  # Change this to your AWS region
-          
+
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2

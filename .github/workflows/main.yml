@@ -62,8 +62,8 @@ jobs:
       - name: Capture Terraform Outputs
         id: capture_terraform_outputs
         run: |
-          echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_access_key_id)" >> $GITHUB_ENV
-          echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_secret_access_key)" >> $GITHUB_ENV
+          echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" >> $GITHUB_ENV
+          echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" >> $GITHUB_ENV
           echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
 
       - name: Create ECR Repositories

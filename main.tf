@@ -182,9 +182,9 @@ data "aws_caller_identity" "current" {}
 #   role  = aws_iam_role.ec2_ecr_role.name
 # }
 
-resource "aws_iam_instance_profile" "ec2_ecr_profile" {
-  name  = "EC2-ECR-Instance-Profile"
-}
+# resource "aws_iam_instance_profile" "ec2_ecr_profile" {
+#   name  = "EC2-ECR-Instance-Profile"
+# }
 
 #----------------------------------------------
 # Create a Security Group for the EC2 instance
@@ -248,7 +248,8 @@ resource "aws_instance" "worker_node" {
   security_groups        = [aws_security_group.worker_node_sg.id]
   associate_public_ip_address = true
 
-  iam_instance_profile   = aws_iam_instance_profile.ec2_ecr_profile.name  # Attach IAM role
+  # iam_instance_profile   = aws_iam_instance_profile.ec2_ecr_profile.name  # Attach IAM role
+  iam_instance_profile   = "EC2-ECR-Instance-Profile"
 
   tags = {
     Name = "WorkerNode"

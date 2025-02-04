@@ -53,8 +53,8 @@ jobs:
       #     chmod +x ./check_and_import.sh
       #     ./check_and_import.sh
 
-      # - name: Terraform destroy
-      #   run: terraform destroy -auto-approve
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
 
       - name: Terraform Plan
         run: terraform plan

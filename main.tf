@@ -116,11 +116,7 @@ data "aws_iam_policy_document" "ecr_policy" {
   }
 }
 
-data "aws_iam_policy" "existing_ecr_policy" {
-  name = "ecr-access-policy-all-repos"
-}
-
-# IAM Policy for ECR Access
+# IAM Policy for ECR Access for user
 resource "aws_iam_policy" "ecr_access_policy" {
   name        = "ecr-access-policy-all-repos"
   description = "ECR access policy for all repositories"

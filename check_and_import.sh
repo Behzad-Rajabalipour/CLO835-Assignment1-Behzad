@@ -111,6 +111,53 @@ import_internet_gateway() {
   fi
 }
 
+
+# Function to check and import EC2 Internet Gateway
+import_internet_gateway() {
+  IGW_NAME="main-igw"
+  IGW_ID=$(aws ec2 describe-internet-gateways --query "InternetGateways[?Tags[?Key=='Name' && Value=='$IGW_NAME']].InternetGatewayId" --output text)
+
+  if [ "$IGW_ID" != "None" ]; then
+    echo "Internet Gateway '$IGW_NAME' exists. Importing into Terraform..."
+    terraform import aws_internet_gateway.main_igw $IGW_ID
+  else
+    echo "Internet Gateway '$IGW_NAME' does not exist. Terraform will create it."
+  fi
+}
+
+# Function to check and import EC2 Route Table Association
+import_route_table_association() {
+  ROUTE_TABLE_NAME="main-route-table"
+  ROUTE_TABLE_ID=$(aws ec2 describe-route-tables --query "RouteTables[?Tags[?Key=='Name' && Value=='$ROUTE_TABLE_NAME']].RouteTableId" --output text)
+
+  if [ "$ROUTE_TABLE_ID" != "None" ]; then
+    echo "Route Table '$ROUTE_TABLE_NAME' exists. Checking for association..."
+    ASSOCIATION_ID=$(aws ec2 describe-route-tables --route-table-id $ROUTE_TABLE_ID --query "RouteTables[0].Associations[0].RouteTableAssociationId" --output text)
+    
+    if [ "$ASSOCIATION_ID" == "None" ]; then
+      echo "No existing association found. Proceeding with association..."
+      terraform import aws_route_table_association.subnet_association $ROUTE_TABLE_ID
+    else
+      echo "Route Table '$ROUTE_TABLE_NAME' already has an association. Skipping association creation."
+    fi
+  else
+    echo "Route Table '$ROUTE_TABLE_NAME' does not exist. Terraform will create it."
+  fi
+}
+
+# Function to check and import EC2 Security Group
+import_security_group() {
+  SG_NAME="worker-node-sg"
+  SG_ID=$(aws ec2 describe-security-groups --query "SecurityGroups[?GroupName=='$SG_NAME'].GroupId" --output text)
+
+  if [ "$SG_ID" != "None" ]; then
+    echo "Security Group '$SG_NAME' already exists. Importing into Terraform..."
+    terraform import aws_security_group.worker_node_sg $SG_ID
+  else
+    echo "Security Group '$SG_NAME' does not exist. Terraform will create it."
+  fi
+}
+
 # Execute Functions
 import_iam_user
 import_iam_policy_USER
@@ -121,3 +168,5 @@ import_vpc
 import_iam_access_key
 import_subnet
 import_internet_gateway
+import_route_table_association
+import_security_group

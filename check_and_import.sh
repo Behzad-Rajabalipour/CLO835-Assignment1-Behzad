@@ -61,7 +61,7 @@ import_instance_profile() {
 
 # Function to check and import EC2 VPC
 import_vpc() {
-  VPC_NAME="my-vpc"
+  VPC_NAME="main-vpc"
   VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[?Tags[?Key=='Name' && Value=='$VPC_NAME']].VpcId" --output text)
   
   if [ "$VPC_ID" != "None" ]; then

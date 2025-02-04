@@ -135,10 +135,6 @@ resource "aws_iam_access_key" "ecr_user_key" {
 }
 
 #-------------------------------------
-data "aws_iam_role" "existing_ec2_role" {
-  name = "EC2-ECR-Access-Role"
-}
-
 # Create an IAM Role for EC2
 resource "aws_iam_role" "ec2_ecr_role" {
   name  = "EC2-ECR-Access-Role"
@@ -179,10 +175,6 @@ resource "aws_iam_policy" "ecr_pull_policy" {
 resource "aws_iam_role_policy_attachment" "ecr_role_attach" {
   role       = aws_iam_role.ec2_ecr_role.name
   policy_arn = aws_iam_policy.ecr_pull_policy.arn
-}
-
-data "aws_iam_instance_profile" "existing_instance_profile" {
-  name = "EC2-ECR-Instance-Profile"
 }
 
 resource "aws_iam_instance_profile" "ec2_ecr_profile" {

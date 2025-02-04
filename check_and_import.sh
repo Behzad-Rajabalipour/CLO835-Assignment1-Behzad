@@ -46,8 +46,36 @@ import_instance_profile() {
   fi
 }
 
+# Function to check and import EC2 VPC
+import_vpc() {
+  VPC_NAME="my-vpc"
+  VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[?Tags[?Key=='Name' && Value=='$VPC_NAME']].VpcId" --output text)
+  
+  if [ "$VPC_ID" != "None" ]; then
+    echo "VPC '$VPC_NAME' exists. Importing into Terraform..."
+    terraform import aws_vpc.main_vpc $VPC_ID
+  else
+    echo "VPC '$VPC_NAME' does not exist. Terraform will create it."
+  fi
+}
+
+# Function to check and import IAM Access Key
+import_iam_access_key() {
+  USER_NAME="ecr-access-user"
+  ACCESS_KEYS=$(aws iam list-access-keys --user-name $USER_NAME --query "AccessKeyMetadata[*].AccessKeyId" --output text)
+
+  if [ $(echo "$ACCESS_KEYS" | wc -w) -ge 2 ]; then
+    echo "User '$USER_NAME' already has 2 access keys. Deleting an old key before creating a new one..."
+    # Optionally delete an old access key
+    OLD_KEY=$(echo "$ACCESS_KEYS" | awk '{print $1}')
+    aws iam delete-access-key --user-name $USER_NAME --access-key-id $OLD_KEY
+  fi
+}
+
 # Execute Functions
 import_iam_user
 import_iam_policy
 import_iam_role
 import_instance_profile
+import_vpc
+import_iam_access_key

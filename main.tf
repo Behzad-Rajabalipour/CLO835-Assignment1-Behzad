@@ -67,9 +67,6 @@ resource "aws_route_table_association" "subnet_association" {
 }
 
 #-----------------------------------------------
-# This is used to get the current user account ID 
-data "aws_caller_identity" "current" {}
-
 resource "aws_iam_user" "ecr_user" {
   name = "ecr-access-user"
 }

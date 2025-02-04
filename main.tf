@@ -24,7 +24,7 @@ resource "aws_vpc" "main_vpc" {
 }
 
 # Create an Internet Gateway
-resource "aws_internet_gateway" "igw" {
+resource "aws_internet_gateway" "main_igw" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {
@@ -45,7 +45,7 @@ resource "aws_route_table" "route_table" {
 resource "aws_route" "internet_access" {
   route_table_id         = aws_route_table.route_table.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.igw.id
+  gateway_id             = aws_internet_gateway.main_igw.id
 }
 
 # Create a Public Subnet

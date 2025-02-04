@@ -24,7 +24,7 @@ resource "aws_vpc" "main_vpc" {
 }
 
 # Create an Internet Gateway
-resource "aws_internet_gateway" "igw" {
+resource "aws_internet_gateway" "main_igw" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {

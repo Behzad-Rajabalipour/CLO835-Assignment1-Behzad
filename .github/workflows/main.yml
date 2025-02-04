@@ -76,7 +76,7 @@ on:
 
 #       - name: Create ECR Repositories
 #         run: |
-#           for repo in my_app my_db; do
+#           for repo in myapp mydb; do
 #             chmod +x create_ecr_repository.sh  # Grant execute permissions
 #             ECR_REPO_NAME=$repo ./create_ecr_repository.sh
 #           done

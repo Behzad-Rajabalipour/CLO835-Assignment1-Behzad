@@ -54,10 +54,10 @@ jobs:
           ./check_and_import.sh
 
       - name: Terraform Plan
-        run: terraform plan -out=plan.out
+        run: terraform plan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve plan.out
+        run: terraform apply -auto-approve
 
       - name: Capture Terraform Outputs
         id: capture_terraform_outputs

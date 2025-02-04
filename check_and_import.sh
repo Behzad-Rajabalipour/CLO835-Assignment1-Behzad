@@ -13,12 +13,12 @@ import_iam_user() {
 
 # Function to check and import IAM Policy
 import_iam_policy() {
-  POLICY_NAME="ecr-access-policy-all-repos"
+  POLICY_NAME="ECRPullPolicy"
   POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-  
+
   if [ -n "$POLICY_ARN" ]; then
     echo "IAM Policy '$POLICY_NAME' exists. Importing into Terraform..."
-    terraform import aws_iam_policy.ecr_access_policy $POLICY_ARN
+    terraform import aws_iam_policy.ecr_pull_policy $POLICY_ARN
   else
     echo "IAM Policy '$POLICY_NAME' does not exist. Terraform will create it."
   fi

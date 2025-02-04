@@ -66,7 +66,7 @@ import_vpc() {
   
   if [ "$VPC_ID" != "None" ]; then
     echo "VPC '$VPC_NAME' exists. Importing into Terraform..."
-    terraform import aws_vpc.main-vpc $VPC_ID
+    terraform import aws_vpc.main_vpc $VPC_ID
   else
     echo "VPC '$VPC_NAME' does not exist. Terraform will create it."
   fi

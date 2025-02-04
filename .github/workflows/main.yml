@@ -36,9 +36,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Change this to your AWS region
 
-      - name: Check or Create EC2 Key Pair
-        run: |
-          python3 create_key_pair.py  
+      # - name: Check or Create EC2 Key Pair
+      #   run: |
+      #     python3 create_key_pair.py  
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -141,11 +141,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-      
-      - name: Set up SSH Key
-        run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -163,8 +158,10 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"  # Change this to your AWS region
 
       - name: Run Ansible Playbook
         run: ansible-playbook -i aws_ec2.yml deploy.yml
         env:
           ECR_REGISTRY: ${{ needs.docker_build_push.outputs.ECR_REGISTRY }}  # <-- Pass ECR_REGISTRY here
+          EC2_PR_KEY: ${{ secrets.EC2_PRIVATE_KEY }}

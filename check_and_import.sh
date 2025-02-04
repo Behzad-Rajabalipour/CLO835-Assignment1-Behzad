@@ -139,11 +139,11 @@ import_security_group() {
   SG_NAME="worker-node-sg"
   SG_ID=$(aws ec2 describe-security-groups --query "SecurityGroups[?GroupName=='$SG_NAME'].GroupId" --output text)
 
-  if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
+  if [ -z "$SG_ID" ] || [ "$SG_ID" == "None" ] || [ "$SG_ID" == "[]" ]; then
+    echo "Security Group '$SG_NAME' does not exist. Terraform will create it."
+  else
     echo "Security Group '$SG_NAME' already exists. Importing into Terraform..."
     terraform import aws_security_group.worker_node_sg $SG_ID
-  else
-    echo "Security Group '$SG_NAME' does not exist. Terraform will create it."
   fi
 }
 

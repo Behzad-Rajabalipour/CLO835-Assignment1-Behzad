@@ -124,10 +124,10 @@ import_route_table_association() {
     ASSOCIATION_ID=$(aws ec2 describe-route-tables --route-table-id $ROUTE_TABLE_ID --query "RouteTables[0].Associations[0].RouteTableAssociationId" --output text)
     
     if [ -n "$ASSOCIATION_ID" ] && [ "$ASSOCIATION_ID" != "None" ]; then
-      echo "Route Table '$ROUTE_TABLE_NAME' already has an association. Skipping association creation."
-    else
-      echo "No existing association found. Proceeding with association..."
+      echo "Route Table '$ROUTE_TABLE_NAME' already has an association. Importing into Terraform..."
       terraform import aws_route_table_association.subnet_association $ROUTE_TABLE_ID
+    else
+      echo "No existing association found. erraform will create it."
     fi
   else
     echo "Route Table '$ROUTE_TABLE_NAME' does not exist. Terraform will create it."

@@ -85,6 +85,32 @@ import_iam_access_key() {
   fi
 }
 
+# Function to check and import EC2 Subnet
+import_subnet() {
+  SUBNET_NAME="public-subnet"
+  SUBNET_ID=$(aws ec2 describe-subnets --query "Subnets[?Tags[?Key=='Name' && Value=='$SUBNET_NAME']].SubnetId" --output text)
+
+  if [ "$SUBNET_ID" != "None" ]; then
+    echo "Subnet '$SUBNET_NAME' exists. Importing into Terraform..."
+    terraform import aws_subnet.public_subnet $SUBNET_ID
+  else
+    echo "Subnet '$SUBNET_NAME' does not exist. Terraform will create it."
+  fi
+}
+
+# Function to check and import EC2 Internet Gateway
+import_internet_gateway() {
+  IGW_NAME="main-igw"
+  IGW_ID=$(aws ec2 describe-internet-gateways --query "InternetGateways[?Tags[?Key=='Name' && Value=='$IGW_NAME']].InternetGatewayId" --output text)
+
+  if [ "$IGW_ID" != "None" ]; then
+    echo "Internet Gateway '$IGW_NAME' exists. Importing into Terraform..."
+    terraform import aws_internet_gateway.main_igw $IGW_ID
+  else
+    echo "Internet Gateway '$IGW_NAME' does not exist. Terraform will create it."
+  fi
+}
+
 # Execute Functions
 import_iam_user
 import_iam_policy_USER
@@ -93,3 +119,5 @@ import_iam_role
 import_instance_profile
 import_vpc
 import_iam_access_key
+import_subnet
+import_internet_gateway

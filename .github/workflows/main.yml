@@ -87,7 +87,7 @@ on:
 jobs:
   docker_build_push:
     name: Build and Push Docker Images to ECR
-    needs: infrastructure
+    # needs: infrastructure
     runs-on: ubuntu-latest
 
     outputs:

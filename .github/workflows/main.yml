@@ -14,7 +14,7 @@ jobs:
     outputs:
       ECR_USER_ACCESS_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_ACCESS_KEY }}
       ECR_USER_SECRET_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_SECRET_KEY }}
-      EC2_PUBLIC_IP: ${{ steps.capture_terraform_outputs.outputs.EC2_PUBLIC_IP }}  
+      EC2_PUBLIC_IP: ${{ env.EC2_PUBLIC_IP }}
 
     steps:
       - name: Checkout Repository
@@ -65,7 +65,6 @@ jobs:
           echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_access_key_id)" >> $GITHUB_ENV
           echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_secret_access_key)" >> $GITHUB_ENV
           echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
-          echo "::set-output name=EC2_PUBLIC_IP::$(terraform output -raw ec2_public_ip)" 
 
       - name: Create ECR Repositories
         env:

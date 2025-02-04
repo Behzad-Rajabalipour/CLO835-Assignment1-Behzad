@@ -16,7 +16,7 @@ import_iam_policy_USER() {
   POLICY_NAME="ecr-access-policy-all-repos"
   POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
   
-  if [ -n "$POLICY_ARN" ]; then
+  if [ -n "$POLICY_ARN" ] && [ "$POLICY_ARN" != "None" ]; then
     echo "IAM Policy '$POLICY_NAME' exists. Importing into Terraform..."
     terraform import aws_iam_policy.ecr_access_policy $POLICY_ARN
   else
@@ -29,7 +29,7 @@ import_iam_policy_EC2() {
   POLICY_NAME="ECRPullPolicy"
   POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
 
-  if [ -n "$POLICY_ARN" ]; then
+  if [ -n "$POLICY_ARN" ] && [ "$POLICY_ARN" != "None" ]; then
     echo "IAM Policy '$POLICY_NAME' exists. Importing into Terraform..."
     terraform import aws_iam_policy.ecr_pull_policy $POLICY_ARN
   else
@@ -64,11 +64,14 @@ import_vpc() {
   VPC_NAME="main-vpc"
   VPC_ID=$(aws ec2 describe-vpcs --query "Vpcs[?Tags[?Key=='Name' && Value=='$VPC_NAME']].VpcId" --output text)
   
-  if [ "$VPC_ID" != "None" ]; then
-    echo "VPC '$VPC_NAME' exists. Importing into Terraform..."
-    terraform import aws_vpc.main_vpc $VPC_ID
+  echo "VPC_ID: $VPC_ID"
+
+  # If no VPC ID was returned, output a message
+  if [ "$VPC_ID" == "None" ] || [ -z "$VPC_ID" ] || [ "$VPC_ID" == "[]" ]; then
+    echo "VPC '$VPC_NAME' does not exist or was not found. Terraform will create it."
   else
-    echo "VPC '$VPC_NAME' does not exist. Terraform will create it."
+    echo "VPC '$VPC_NAME' exists. Importing into Terraform..."
+    terraform import aws_vpc.main_vpc "$VPC_ID"
   fi
 }
 
@@ -90,7 +93,7 @@ import_subnet() {
   SUBNET_NAME="public-subnet"
   SUBNET_ID=$(aws ec2 describe-subnets --query "Subnets[?Tags[?Key=='Name' && Value=='$SUBNET_NAME']].SubnetId" --output text)
 
-  if [ "$SUBNET_ID" != "None" ]; then
+  if [ -n "$SUBNET_ID" ] && [ "$SUBNET_ID" != "None" ]; then
     echo "Subnet '$SUBNET_NAME' exists. Importing into Terraform..."
     terraform import aws_subnet.public_subnet $SUBNET_ID
   else
@@ -103,21 +106,7 @@ import_internet_gateway() {
   IGW_NAME="main-igw"
   IGW_ID=$(aws ec2 describe-internet-gateways --query "InternetGateways[?Tags[?Key=='Name' && Value=='$IGW_NAME']].InternetGatewayId" --output text)
 
-  if [ "$IGW_ID" != "None" ]; then
-    echo "Internet Gateway '$IGW_NAME' exists. Importing into Terraform..."
-    terraform import aws_internet_gateway.main_igw $IGW_ID
-  else
-    echo "Internet Gateway '$IGW_NAME' does not exist. Terraform will create it."
-  fi
-}
-
-
-# Function to check and import EC2 Internet Gateway
-import_internet_gateway() {
-  IGW_NAME="main-igw"
-  IGW_ID=$(aws ec2 describe-internet-gateways --query "InternetGateways[?Tags[?Key=='Name' && Value=='$IGW_NAME']].InternetGatewayId" --output text)
-
-  if [ "$IGW_ID" != "None" ]; then
+  if [ -n "$IGW_ID" ] && [ "$IGW_ID" != "None" ]; then
     echo "Internet Gateway '$IGW_NAME' exists. Importing into Terraform..."
     terraform import aws_internet_gateway.main_igw $IGW_ID
   else
@@ -130,15 +119,15 @@ import_route_table_association() {
   ROUTE_TABLE_NAME="main-route-table"
   ROUTE_TABLE_ID=$(aws ec2 describe-route-tables --query "RouteTables[?Tags[?Key=='Name' && Value=='$ROUTE_TABLE_NAME']].RouteTableId" --output text)
 
-  if [ "$ROUTE_TABLE_ID" != "None" ]; then
+  if [ -n "$ROUTE_TABLE_ID" ] && [ "$ROUTE_TABLE_ID" != "None" ]; then
     echo "Route Table '$ROUTE_TABLE_NAME' exists. Checking for association..."
     ASSOCIATION_ID=$(aws ec2 describe-route-tables --route-table-id $ROUTE_TABLE_ID --query "RouteTables[0].Associations[0].RouteTableAssociationId" --output text)
     
-    if [ "$ASSOCIATION_ID" == "None" ]; then
+    if [ -n "$ASSOCIATION_ID" ] && [ "$ASSOCIATION_ID" != "None" ]; then
+      echo "Route Table '$ROUTE_TABLE_NAME' already has an association. Skipping association creation."
+    else
       echo "No existing association found. Proceeding with association..."
       terraform import aws_route_table_association.subnet_association $ROUTE_TABLE_ID
-    else
-      echo "Route Table '$ROUTE_TABLE_NAME' already has an association. Skipping association creation."
     fi
   else
     echo "Route Table '$ROUTE_TABLE_NAME' does not exist. Terraform will create it."
@@ -150,7 +139,7 @@ import_security_group() {
   SG_NAME="worker-node-sg"
   SG_ID=$(aws ec2 describe-security-groups --query "SecurityGroups[?GroupName=='$SG_NAME'].GroupId" --output text)
 
-  if [ "$SG_ID" != "None" ]; then
+  if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
     echo "Security Group '$SG_NAME' already exists. Importing into Terraform..."
     terraform import aws_security_group.worker_node_sg $SG_ID
   else

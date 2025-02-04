@@ -48,10 +48,13 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Run check_and_import.sh to Import IAM User if Needed
-        run: |
-          chmod +x ./check_and_import.sh
-          ./check_and_import.sh
+      # - name: Run check_and_import.sh to Import IAM User if Needed
+      #   run: |
+      #     chmod +x ./check_and_import.sh
+      #     ./check_and_import.sh
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
 
       - name: Terraform Plan
         run: terraform plan

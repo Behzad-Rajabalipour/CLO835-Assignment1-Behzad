@@ -114,7 +114,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: "1"
         run: |
-          for service in my_app my_db; do
+          for service in myapp mydb; do
             docker build -t $ECR_REGISTRY/$service:${IMAGE_TAG} -f Dockerfile_${service} .
             docker push $ECR_REGISTRY/$service:${IMAGE_TAG}
           done
@@ -126,7 +126,7 @@ jobs:
           IMAGE_TAG: "1"
           LATEST_TAG: latest
         run: |
-          for service in my_app my_db; do
+          for service in myapp mydb; do
             docker tag $ECR_REGISTRY/$service:${IMAGE_TAG} $ECR_REGISTRY/$service:${LATEST_TAG}
             docker push $ECR_REGISTRY/$service:${LATEST_TAG}
           done

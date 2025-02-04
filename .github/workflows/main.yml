@@ -72,6 +72,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ env.ECR_USER_SECRET_KEY }}
         run: |
           for repo in my_app my_db; do
+            chmod +x create_ecr_repository.sh  # Grant execute permissions
             ECR_REPO_NAME=$repo ./create_ecr_repository.sh
           done
 

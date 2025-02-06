@@ -5,6 +5,7 @@
 .terraform/
 crash.log
 *.tfbackup
+.terraform.*
 
 # Virtual Environment
 venv/

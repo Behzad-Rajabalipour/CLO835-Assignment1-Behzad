@@ -1,0 +1,46 @@
+# Automation Process
+
+1. Create AWS EC2 Key pair and add private key into the GitHUb Action Environment
+2. Add AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY into the GitHub Action Environemnt
+3. push into prod branch and then pull it into the Main branch to trigger Auromation
+Then it goes through GitHub Action workflow mainyml file.
+
+There are three jobs:
+    A.In the First Job name infrastructure, it provide infrastrucrue and dependecies into JOB runner Ubuntu:
+        1.Install Python
+        2.Install AWS CLI and boto3
+        3.configure AWS credentials
+        4.Run Terraform
+        5.It runs bash file to check if the IAM user with policies that can push images into AWS ECR already created, it will delete it. It also checks about gateway, subnets, VPC and EC2 role which makes it be able to pull image from AWS ECR, and if they exists with terraform import it import them into AWS
+        6. Terraform Apply will create a new IAM user with ability to push into AWS ECR
+        7. we output new IAM user ACCESS KEY and SECRET ACCESS KEy into the next Job
+    B. In the second job named docker_build_push it create and push images from EC2 instance into the AWS ECR:
+        1. Configure AWS Credentials with new IAM user created
+        2. login from inside EC2 instance to AWS ECR
+        3. Build the image from Dockerfile_myapp and Dockerfile_mydb which are available in GitHub Repository
+        4. push the Image from EC2 into AWS ECR
+    C. Job Three is for Deploy Application to EC2 with Ansible 
+        1. Install Python, pip, boto3 and botocore 
+        2. install Ansible
+        3. Add Configure AWS Credentials into GitHub Action Job runner
+        4. Run Ansible Inventory Named aws_ec2.yml with playbook named deploy.yml file
+            1. Inventory will dynamically update EC2 Instance IP address so even with recreation of EC2 instance, Inventory is still upto date wit correct IPV4
+            2. Login into the EC2 instance through aws_ec2.yml Ansible Inventory
+            3. Run deploy.yml Ansible playbook file
+            4. deploy.yml playbook:
+                1. Install Docker, active and restart it
+                2. Install Docker-compose
+                4. Copy docker-compose file from GitHub repository into EC2 instance
+                5. Correct permission of docker, command: sudo usermod -aG docker $USER
+                6. Authenticate with AWS ECR
+                7. Run Docker compose to pull and after that run it
+Result:
+    We have three apps which are connect to DB container with persisten volume Inside oen AWS ECR
+    All four containers are in he same network so we can ping from inside one to another
+    Three apps are running on port 8081,8082, and 8083 inside the EC2 Instance
+
+Add these pictures:
+App1.PNG address: ~/images/APP1.PNG
+App2.PNG address: ~/images/APP2.PNG
+App3.PNG address: ~/images/APP3.PNG
+Ping.PNG address: ~/images/Ping.PNG

@@ -50,10 +50,11 @@ This job deploys the application using Ansible:
 
 ## 4. Application Screenshots
 Include the following images:
-- **App 1:** `![App 1](images/APP1.PNG)`
-- **App 2:** `![App 2](images/APP2.PNG)`
-- **App 3:** `![App 3](images/APP3.PNG)`
-- **Ping Test:** `![Ping Test](images/Ping.PNG)`
+- **App 1:** ![App 1](images/App1.PNG)
+- **App 2:** ![App 2](images/App2.PNG)
+- **App 3:** ![App 3](images/APP3.PNG)
+- **Ping Test:** ![Ping Test](images/Ping.PNG)
+
 
 
 # Manual Installation Process

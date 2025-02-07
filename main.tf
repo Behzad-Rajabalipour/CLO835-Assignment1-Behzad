@@ -70,121 +70,121 @@ resource "aws_route_table_association" "subnet_association" {
 # This is used to get the current user account ID 
 data "aws_caller_identity" "current" {}
 
-# resource "aws_iam_user" "ecr_user" {
-#   name = "ecr-access-user"
-# }
+resource "aws_iam_user" "ecr_user" {
+  name = "ecr-access-user"
+}
 
-# # IAM Policy Document for ECR Access (all repositories)
-# data "aws_iam_policy_document" "ecr_policy" {
-#   statement {
-#     effect    = "Allow"
-#     actions   = [
-#       "ecr:GetDownloadUrlForLayer", 
-#       "ecr:BatchGetImage", 
-#       "ecr:BatchCheckLayerAvailability", 
-#       "ecr:InitiateLayerUpload", 
-#       "ecr:UploadLayerPart", 
-#       "ecr:PutImage"
-#     ]
-#     resources = ["arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"]
-#   }
+# IAM Policy Document for ECR Access (all repositories)
+data "aws_iam_policy_document" "ecr_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = [
+      "ecr:GetDownloadUrlForLayer", 
+      "ecr:BatchGetImage", 
+      "ecr:BatchCheckLayerAvailability", 
+      "ecr:InitiateLayerUpload", 
+      "ecr:UploadLayerPart", 
+      "ecr:PutImage"
+    ]
+    resources = ["arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"]
+  }
 
-#   statement {
-#     effect  = "Allow"
-#     actions = [
-#       "ecr:ListImages", 
-#       "ecr:DescribeImages", 
-#       "ecr:DescribeRepositories", 
-#       "ecr:GetRepositoryPolicy", 
-#       "ecr:CreateRepository", 
-#       "ecr:DeleteRepository", 
-#       "ecr:TagResource", 
-#       "ecr:UntagResource", 
-#       "ecr:PutRepositoryPolicy", 
-#       "ecr:GetLifecyclePolicy", 
-#       "ecr:PutLifecyclePolicy", 
-#       "ecr:CompleteLayerUpload", 
-#       "ecr:DescribeImageScanFindings"
-#     ]
-#     resources = ["arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"]
-#   }
+  statement {
+    effect  = "Allow"
+    actions = [
+      "ecr:ListImages", 
+      "ecr:DescribeImages", 
+      "ecr:DescribeRepositories", 
+      "ecr:GetRepositoryPolicy", 
+      "ecr:CreateRepository", 
+      "ecr:DeleteRepository", 
+      "ecr:TagResource", 
+      "ecr:UntagResource", 
+      "ecr:PutRepositoryPolicy", 
+      "ecr:GetLifecyclePolicy", 
+      "ecr:PutLifecyclePolicy", 
+      "ecr:CompleteLayerUpload", 
+      "ecr:DescribeImageScanFindings"
+    ]
+    resources = ["arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"]
+  }
 
-#   statement {
-#     effect    = "Allow"
-#     actions   = ["ecr:GetAuthorizationToken"]
-#     resources = ["*"]
-#   }
-# }
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+}
 
-# # IAM Policy for ECR Access for user
-# resource "aws_iam_policy" "ecr_access_policy" {
-#   name        = "ecr-access-policy-all-repos"
-#   description = "ECR access policy for all repositories"
-#   policy      = data.aws_iam_policy_document.ecr_policy.json
-# }
+# IAM Policy for ECR Access for user
+resource "aws_iam_policy" "ecr_access_policy" {
+  name        = "ecr-access-policy-all-repos"
+  description = "ECR access policy for all repositories"
+  policy      = data.aws_iam_policy_document.ecr_policy.json
+}
 
-# # Attach IAM Policy to the User
-# resource "aws_iam_user_policy_attachment" "ecr_user_policy" {
-#   user       = aws_iam_user.ecr_user.name
-#   policy_arn = aws_iam_policy.ecr_access_policy.arn
-# }
+# Attach IAM Policy to the User
+resource "aws_iam_user_policy_attachment" "ecr_user_policy" {
+  user       = aws_iam_user.ecr_user.name
+  policy_arn = aws_iam_policy.ecr_access_policy.arn
+}
 
-# # IAM Access Key for the ECR User
-# resource "aws_iam_access_key" "ecr_user_key" {
-#   user = aws_iam_user.ecr_user.name
-# }
+# IAM Access Key for the ECR User
+resource "aws_iam_access_key" "ecr_user_key" {
+  user = aws_iam_user.ecr_user.name
+}
 
-# #-------------------------------------
-# # Create an IAM Role for EC2
-# resource "aws_iam_role" "ec2_ecr_role" {
-#   name  = "EC2-ECR-Access-Role"
+#-------------------------------------
+# Create an IAM Role for EC2
+resource "aws_iam_role" "ec2_ecr_role" {
+  name  = "EC2-ECR-Access-Role"
 
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [{
-#       Effect = "Allow"
-#       Principal = {
-#         Service = "ec2.amazonaws.com"
-#       }
-#       Action = "sts:AssumeRole"
-#     }]
-#   })
-# }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
 
-# # Attach an IAM Policy to allow EC2 to pull images from ECR
-# resource "aws_iam_policy" "ecr_pull_policy" {
-#   name        = "ECRPullPolicy"
-#   description = "Allows EC2 instances to pull images from ECR"
+# Attach an IAM Policy to allow EC2 to pull images from ECR
+resource "aws_iam_policy" "ecr_pull_policy" {
+  name        = "ECRPullPolicy"
+  description = "Allows EC2 instances to pull images from ECR"
   
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [{
-#       Effect = "Allow"
-#       Action = [
-#         "ecr:GetAuthorizationToken",
-#         "ecr:BatchCheckLayerAvailability",
-#         "ecr:GetDownloadUrlForLayer",
-#         "ecr:BatchGetImage"
-#       ]
-#       Resource = "*"
-#     }]
-#   })
-# }
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ]
+      Resource = "*"
+    }]
+  })
+}
 
-# # Attach the policy to the IAM Role
-# resource "aws_iam_role_policy_attachment" "ecr_role_attach" {
-#   role       = aws_iam_role.ec2_ecr_role.name
-#   policy_arn = aws_iam_policy.ecr_pull_policy.arn
-# }
+# Attach the policy to the IAM Role
+resource "aws_iam_role_policy_attachment" "ecr_role_attach" {
+  role       = aws_iam_role.ec2_ecr_role.name
+  policy_arn = aws_iam_policy.ecr_pull_policy.arn
+}
 
-# resource "aws_iam_instance_profile" "ec2_ecr_profile" {
-#   name  = "EC2-ECR-Instance-Profile"
-#   role  = aws_iam_role.ec2_ecr_role.name
-# }
+resource "aws_iam_instance_profile" "ec2_ecr_profile" {
+  name  = "EC2-ECR-Instance-Profile"
+  role  = aws_iam_role.ec2_ecr_role.name
+}
 
-# resource "aws_iam_instance_profile" "ec2_ecr_profile" {
-#   name  = "EC2-ECR-Instance-Profile"
-# }
+resource "aws_iam_instance_profile" "ec2_ecr_profile" {
+  name  = "EC2-ECR-Instance-Profile"
+}
 
 #----------------------------------------------
 # Create a Security Group for the EC2 instance
@@ -248,8 +248,7 @@ resource "aws_instance" "worker_node" {
   security_groups        = [aws_security_group.worker_node_sg.id]
   associate_public_ip_address = true
 
-  # iam_instance_profile   = aws_iam_instance_profile.ec2_ecr_profile.name  # Attach IAM role
-  iam_instance_profile   = "EC2-ECR-Instance-Profile"
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ecr_profile.name  # Attach IAM role
 
   tags = {
     Name = "WorkerNode"

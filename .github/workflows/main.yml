@@ -7,135 +7,129 @@ on:
   workflow_dispatch:
 
 jobs:
-  # infrastructure:
-  #   name: Provision AWS Infrastructure
-  #   runs-on: ubuntu-latest
+  infrastructure:
+    name: Provision AWS Infrastructure
+    runs-on: ubuntu-latest
 
-  #   outputs:
-  #     ECR_USER_ACCESS_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_ACCESS_KEY }}
-  #     ECR_USER_SECRET_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_SECRET_KEY }}
-  #     EC2_PUBLIC_IP: ${{ env.EC2_PUBLIC_IP }}
+    outputs:
+      ECR_USER_ACCESS_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_ACCESS_KEY }}
+      ECR_USER_SECRET_KEY: ${{ steps.capture_terraform_outputs.outputs.ECR_USER_SECRET_KEY }}
+      EC2_PUBLIC_IP: ${{ env.EC2_PUBLIC_IP }}
 
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: '3.10.8'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.8'
     
-  #     - name: Install AWS CLI and Boto3
-  #       run: |
-  #         pip install awscli boto3
+      - name: Install AWS CLI and Boto3
+        run: |
+          pip install awscli boto3
 
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: us-east-1  # Change this to your AWS region
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Change this to your AWS region
 
-  #     # - name: Check or Create EC2 Key Pair
-  #     #   run: |
-  #     #     python3 create_key_pair.py  
+      # - name: Check or Create EC2 Key Pair
+      #   run: |
+      #     python3 create_key_pair.py  
 
-  #     - name: Set up Terraform
-  #       uses: hashicorp/setup-terraform@v2
-  #       with:
-  #         terraform_version: '1.5.0'
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.5.0'
 
-  #     - name: Terraform Init
-  #       run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-  #     # - name: Run check_and_import.sh to Import IAM User if Needed
-  #     #   run: |
-  #     #     chmod +x ./check_and_import.sh
-  #     #     ./check_and_import.sh
+      - name: Run check_and_import.sh to Import IAM User if Needed
+        run: |
+          chmod +x ./check_and_import.sh
+          ./check_and_import.sh
 
-  #     - name: Terraform destroy
-  #       run: terraform destroy -auto-approve
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
 
-  #     - name: Terraform Plan
-  #       run: terraform plan
+      - name: Terraform Plan
+        run: terraform plan
 
-  #     - name: Terraform Apply
-  #       run: terraform apply -auto-approve
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
 
-  #     # - name: Capture Terraform Outputs
-  #     #   id: capture_terraform_outputs
-  #     #   run: |
-  #     #     echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" >> $GITHUB_ENV
-  #     #     echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" >> $GITHUB_ENV
-  #     #     echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
+      - name: Capture Terraform Outputs
+        id: capture_terraform_outputs
+        run: |
+          echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" >> $GITHUB_ENV
+          echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" >> $GITHUB_ENV
+          echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
 
-  #     #     echo "ECR_USER_ACCESS_KEY=$(terraform output -raw ecr_user_access_key_id)" 
-  #     #     echo "ECR_USER_SECRET_KEY=$(terraform output -raw ecr_user_secret_access_key)" 
-  #     #     echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" 
+      - name: Create ECR Repositories
+        run: |
+          for repo in myapp mydb; do
+            chmod +x create_ecr_repository.sh  # Grant execute permissions
+            ECR_REPO_NAME=$repo ./create_ecr_repository.sh
+          done
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.ECR_USER_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_USER_SECRET_KEY }}
+          AWS_REGION: "us-east-1"
+      
+      - name: Tag and Push Latest Images
+        if: github.ref == 'refs/heads/main'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: "1"
+          LATEST_TAG: latest
+        run: |
+          for service in myapp mydb; do
+            docker tag $ECR_REGISTRY/$service:${IMAGE_TAG} $ECR_REGISTRY/$service:${LATEST_TAG}
+            docker push $ECR_REGISTRY/$service:${LATEST_TAG}
+          done
 
+  docker_build_push:
+    name: Build and Push Docker Images to ECR
+    needs: infrastructure
+    runs-on: ubuntu-latest
 
-  #     - name: Create ECR Repositories
-  #       run: |
-  #         for repo in myapp mydb; do
-  #           chmod +x create_ecr_repository.sh  # Grant execute permissions
-  #           ECR_REPO_NAME=$repo ./create_ecr_repository.sh
-  #         done
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.ECR_USER_ACCESS_KEY }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_USER_SECRET_KEY }}
-  #         AWS_REGION: "us-east-1"
+    outputs:
+      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
 
-  # docker_build_push:
-  #   name: Build and Push Docker Images to ECR
-  #   needs: infrastructure
-  #   runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-  #   outputs:
-  #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      - name: Configure AWS Credentials for ECR
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.ECR_USER_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ECR_USER_SECRET_KEY }}
+          aws-region: "us-east-1"  # Change this to your AWS region
 
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v3
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-  #     - name: Configure AWS Credentials for ECR
-  #       uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.ECR_USER_ACCESS_KEY }}
-  #         aws-secret-access-key: ${{ secrets.ECR_USER_SECRET_KEY }}
-  #         aws-region: "us-east-1"  # Change this to your AWS region
-
-
-  #     - name: Log in to Amazon ECR
-  #       id: login-ecr
-  #       uses: aws-actions/amazon-ecr-login@v2
-
-  #     - name: Build and Push Docker Images
-  #       env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         IMAGE_TAG: "1"
-  #       run: |
-  #         for service in myapp mydb; do
-  #           docker build -t $ECR_REGISTRY/$service:${IMAGE_TAG} -f Dockerfile_${service} .
-  #           docker push $ECR_REGISTRY/$service:${IMAGE_TAG}
-  #         done
-
-  #     - name: Tag and Push Latest Images
-  #       if: github.ref == 'refs/heads/main'
-  #       env:
-  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-  #         IMAGE_TAG: "1"
-  #         LATEST_TAG: latest
-  #       run: |
-  #         for service in myapp mydb; do
-  #           docker tag $ECR_REGISTRY/$service:${IMAGE_TAG} $ECR_REGISTRY/$service:${LATEST_TAG}
-  #           docker push $ECR_REGISTRY/$service:${LATEST_TAG}
-  #         done
+      - name: Build and Push Docker Images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: "1"
+        run: |
+          for service in myapp mydb; do
+            docker build -t $ECR_REGISTRY/$service:${IMAGE_TAG} -f Dockerfile_${service} .
+            docker push $ECR_REGISTRY/$service:${IMAGE_TAG}
+          done
 
   deploy:
     name: Deploy Application to EC2 with Ansible
-    # needs:                # prerequisite
-    #   - infrastructure  # <-- Add this to get EC2_PUBLIC_IP
-    #   - docker_build_push  # <-- Keep this to ensure images are built before deploying
+    needs:                # prerequisite
+      - infrastructure  # <-- Add this to get EC2_PUBLIC_IP
+      - docker_build_push  # <-- Keep this to ensure images are built before deploying
     runs-on: ubuntu-latest
 
     steps:
@@ -163,6 +157,8 @@ jobs:
       - name: Run Ansible Playbook
         run: ansible-playbook -i aws_ec2.yml deploy.yml
         env:
-          # ECR_REGISTRY: ${{ needs.docker_build_push.outputs.ECR_REGISTRY }}  
-          ECR_REGISTRY: "084375546682.dkr.ecr.us-east-1.amazonaws.com"  
+          ECR_REGISTRY: ${{ needs.docker_build_push.outputs.ECR_REGISTRY }}  
           EC2_PR_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ECR_USER_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_USER_SECRET_KEY }}
+          DB_PASS: ${{ secrets.DB_PASS }}

@@ -122,12 +122,12 @@
         state: latest
       become: yes
 
-    # - name: Authenticate with Amazon ECR
-    #   command: >
-    #     bash -c "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ECR_REGISTRY }}"
-    #   environment:
-    #     AWS_ACCESS_KEY_ID: "{{ AWS_ACCESS_KEY_ID }}"
-    #     AWS_SECRET_ACCESS_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
+    - name: Authenticate with Amazon ECR
+      command: >
+        bash -c "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ECR_REGISTRY }}"
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_ACCESS_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
 
     - name: Show Docker Compose version
       command: /usr/local/bin/docker-compose --version
@@ -175,5 +175,5 @@
       environment:
         ECR_REGISTRY: "{{ ECR_REGISTRY }}"
         IMAGE_TAG: "1"
-        DB_PASSWORD: "behzad123"
+        DB_PASSWORD: "{{ DB_PASS }}"
         PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"

@@ -12,6 +12,6 @@ filters:
   # tag:Name: WorkerNode        # it filters from all instances it found to this tag
 compose:                  # variables
   ansible_host: public_ip_address  # ansible_host is a default variable in ansible to login into instances. aws returns public_ip_address variable
-  # ansible_user: ec2-user  # Set the user for SSH login
-  # ansible_ssh_private_key_file: /home/ec2-user/.ssh/ec2_key.pem  # Path to the private key for SSH
-  # shell: /bin/bash  # Set the default shell
+  ansible_user: ec2-user  # Set the user for SSH login
+  ansible_ssh_private_key_file: /home/ec2-user/.ssh/ec2_key.pem  # Path to the private key for SSH
+  shell: /bin/bash  # Set the default shell
